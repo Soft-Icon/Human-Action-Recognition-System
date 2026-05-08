@@ -196,7 +196,7 @@ class VideoProcessor(VideoProcessorBase):
         self.holistic = mp_holistic.Holistic(
             min_detection_confidence=0.7,
             min_tracking_confidence=0.7,
-            model_complexity=0  
+            model_complexity=1 
         )
         self.fps = 0
         self.latency = 0
