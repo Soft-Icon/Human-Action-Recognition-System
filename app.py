@@ -6,7 +6,7 @@ import pickle
 import pandas as pd
 import time
 from collections import deque, Counter
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, RTCConfiguration
 from av import VideoFrame
 
 # -------------------------------
@@ -123,8 +123,12 @@ class VideoProcessor(VideoProcessorBase):
 # -------------------------------
 # Run Stream
 # -------------------------------
+RTC_CONFIGURATION = RTCConfiguration(
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+)
 ctx = webrtc_streamer(
     key="har-final",
+    rtc_configuration=RTC_CONFIGURATION,
     video_processor_factory=VideoProcessor,
     async_processing=True,
 )
