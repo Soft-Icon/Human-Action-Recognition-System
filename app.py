@@ -147,6 +147,8 @@
 #     ])
 #     history_placeholder.markdown(f"**Prediction History:**<br>{chips}", unsafe_allow_html=True)
 
+import os
+from twilio.rest import Client
 import streamlit as st
 import cv2
 import numpy as np
@@ -268,21 +270,34 @@ class VideoProcessor(VideoProcessorBase):
         return VideoFrame.from_ndarray(img, format="bgr24")
 
 
-# -------------------------------
-# Run Stream
-# -------------------------------
+@st.cache_data
+def get_ice_servers():
+    """Use Twilio's TURN server to bypass strict firewalls."""
+    try:
+        account_sid = st.secrets["TWILIO_ACCOUNT_SID"]
+        auth_token = st.secrets["TWILIO_AUTH_TOKEN"]
+    except KeyError:
+        # Fallback to standard STUN if secrets are missing (e.g. testing locally)
+        return [{"urls": ["stun:stun.l.google.com:19302"]}]
+
+    # Fetch the TURN servers from Twilio
+    client = Client(account_sid, auth_token)
+    token = client.tokens.create()
+    return token.ice_servers
+
+# --- Update your RTC Configuration ---
 RTC_CONFIGURATION = RTCConfiguration(
-    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+    {"iceServers": get_ice_servers()}
 )
 
+# --- Update your streamer call ---
 ctx = webrtc_streamer(
     key="har-final",
     rtc_configuration=RTC_CONFIGURATION,
     video_processor_factory=VideoProcessor,
     async_processing=True,
-    media_stream_constraints={"video": True, "audio": False},
+    media_stream_constraints={"video": True, "audio": False}, # Keep audio false for stability
 )
-
 # -------------------------------
 # UI UPDATE 
 # -------------------------------
